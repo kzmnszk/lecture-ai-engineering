@@ -7,6 +7,9 @@ import time
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import accuracy_score
+from sklearn.metrics import recall_score
+from sklearn.metrics import precision_score
+from sklearn.metrics import f1_score
 from sklearn.impute import SimpleImputer
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
@@ -115,10 +118,43 @@ def test_model_accuracy(train_model):
 
     # 予測と精度計算
     y_pred = model.predict(X_test)
-    accuracy = accuracy_score(y_test, y_pred)
+    score = accuracy_score(y_test, y_pred)
 
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
-    assert accuracy >= 0.75, f"モデルの精度が低すぎます: {accuracy}"
+    assert score >= 0.75, f"モデルの精度が低すぎます: {score}"
+
+def test_model_prcesion(train_model):
+    """モデルの精度を検証"""
+    model, X_test, y_test = train_model
+
+    # 予測と精度計算
+    y_pred = model.predict(X_test)
+    score = precision_score(y_test, y_pred)
+
+    # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
+    assert score >= 0.75, f"モデルの精度が低すぎます: {score}"
+
+def test_model_recall(train_model):
+    """モデルの精度を検証"""
+    model, X_test, y_test = train_model
+
+    # 予測と精度計算
+    y_pred = model.predict(X_test)
+    score = recall_score(y_test, y_pred)
+
+    # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
+    assert score >= 0.70, f"モデルの精度が低すぎます: {score}"
+
+def test_model_f1(train_model):
+    """モデルの精度を検証"""
+    model, X_test, y_test = train_model
+
+    # 予測と精度計算
+    y_pred = model.predict(X_test)
+    score = f1_score(y_test, y_pred)
+
+    # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
+    assert score >= 0.75, f"モデルの精度が低すぎます: {score}"
 
 
 def test_model_inference_time(train_model):
