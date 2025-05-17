@@ -1,6 +1,7 @@
 import os
 import mlflow
 import mlflow.sklearn
+import mlflow.tracking
 import pandas as pd
 import numpy as np
 import random
@@ -10,12 +11,12 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.preprocessing import LabelEncoder
 from mlflow.models.signature import infer_signature
-
+from datetime import datetime
 
 # データ準備
 def prepare_data(test_size=0.2, random_state=42):
     # Titanicデータセットの読み込み
-    path = "data/Titanic.csv"
+    path = "演習1/data/Titanic.csv"
     data = pd.read_csv(path)
 
     # 必要な特徴量の選択と前処理
@@ -53,7 +54,7 @@ def train_and_evaluate(
 
 
 # モデル保存
-def log_model(model, accuracy, params):
+def log_model(model, accuracy, duration, params):
     with mlflow.start_run():
         # パラメータをログ
         for param_name, param_value in params.items():
@@ -62,6 +63,8 @@ def log_model(model, accuracy, params):
         # メトリクスをログ
         mlflow.log_metric("accuracy", accuracy)
 
+        # 訓練時間をログ
+        mlflow.log_param("train_duration_sec", duration)
         # モデルのシグネチャを推論
         signature = infer_signature(X_train, model.predict(X_train))
 
@@ -73,7 +76,10 @@ def log_model(model, accuracy, params):
             input_example=X_test.iloc[:5],  # 入力例を指定
         )
         # accurecyとparmsは改行して表示
-        print(f"モデルのログ記録値 \naccuracy: {accuracy}\nparams: {params}")
+        print(f"***モデルのログ***")
+        print(f"accuracy: {accuracy}")
+        print(f"params: {params}")
+        print(f"duration: {duration} sec")
 
 
 # メイン処理
@@ -101,6 +107,7 @@ if __name__ == "__main__":
         test_size=test_size, random_state=data_random_state
     )
 
+    time_start = datetime.now()
     # 学習と評価
     model, accuracy = train_and_evaluate(
         X_train,
@@ -111,9 +118,14 @@ if __name__ == "__main__":
         max_depth=max_depth,
         random_state=model_random_state,
     )
+    time_end = datetime.now()
+    duration = (time_end - time_start).total_seconds()
+    # print(time_start)
+    # print(time_end)
+    # print(duration)
 
     # モデル保存
-    log_model(model, accuracy, params)
+    log_model(model, accuracy, duration, params)
 
     model_dir = "models"
     os.makedirs(model_dir, exist_ok=True)
@@ -121,3 +133,13 @@ if __name__ == "__main__":
     with open(model_path, "wb") as f:
         pickle.dump(model, f)
     print(f"モデルを {model_path} に保存しました")
+
+    client = mlflow.tracking.MlflowClient()
+    experiment = client.get_experiment_by_name("Default")
+    runs = client.search_runs(experiment_ids=[experiment.experiment_id],
+                              order_by=['metrics.accuracy DESC'],
+                              max_results=5)
+    print("=== 過去の精度一覧 ===")
+    for run in runs:
+        acc = run.data.metrics.get("accuracy")
+        print(f"Run ID: {run.info.run_id}, Accuracy: {acc}")
