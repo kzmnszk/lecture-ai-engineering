@@ -135,7 +135,7 @@ def test_model_prcesion(train_model):
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
     assert score >= 0.75, f"モデルの精度が低すぎます: {score}"
 
-
+    
 def test_model_recall(train_model):
     """モデルの精度を検証"""
     model, X_test, y_test = train_model
@@ -147,7 +147,7 @@ def test_model_recall(train_model):
     # Titanicデータセットでは0.75以上の精度が一般的に良いとされる
     assert score >= 0.70, f"モデルの精度が低すぎます: {score}"
 
-
+    
 def test_model_f1(train_model):
     """モデルの精度を検証"""
     model, X_test, y_test = train_model
